@@ -127,3 +127,21 @@ Se você quiser, pode salvar esses prints em uma pasta como `docs/imagens/` e tr
 - O sistema evita leituras duplicadas usando o UUID como chave primária.
 - O backend retorna `201` para leituras novas e `200` para leituras já processadas.
 - O servidor roda em `0.0.0.0:5000`, então pode ser acessado por outros dispositivos na rede.
+
+## Exemplo de Execução:
+
+<img width="1920" height="1080" alt="Captura de tela 2026-04-05 165447" src="https://github.com/user-attachments/assets/2c66f932-0977-493c-9990-6cec5175e312" />
+
+Aqui apenas abri o aplicativo!
+
+<img width="1920" height="1080" alt="Captura de tela 2026-04-05 165542" src="https://github.com/user-attachments/assets/2a95d4e4-6456-4faa-ab30-9f0ad005ab2e" />
+
+Veja que inseri um teste manual onde o resultado foi normal.
+
+<img width="1920" height="1080" alt="Captura de tela 2026-04-05 165640" src="https://github.com/user-attachments/assets/ed7c909b-4440-486b-8ced-8be2ef570d90" />
+
+Aqui inseri outro teste manual onde o resultado foi crítico, pois a regra de negócio diz que temperatura > 15°C = Crítico.
+
+<img width="1920" height="1080" alt="Captura de tela 2026-04-05 165733" src="https://github.com/user-attachments/assets/dcf65bfc-b6c0-4b53-85a5-ffd9114090c5" />
+
+Já aqui coloquei para inserir valores aleatórios. Perceba que ele está seguindo as regras de negócio da forma que foi projetado, utilizando Normal, Alerta e Crítico.
