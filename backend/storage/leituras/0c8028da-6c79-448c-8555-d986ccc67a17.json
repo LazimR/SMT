@@ -1,0 +1,8 @@
+{
+  "id": "0c8028da-6c79-448c-8555-d986ccc67a17",
+  "sensor_id": "sensor-01",
+  "temperatura": 18.01,
+  "status_logico": "Crítico",
+  "timestamp": "2026-04-05T16:57:39.622493",
+  "processado_em": "2026-04-05T16:57:41.688028"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "3530de4a-0c40-4f85-8eb4-88c9fad6d27d",
+  "sensor_id": "sensor-01",
+  "temperatura": 14.83,
+  "status_logico": "Alerta",
+  "timestamp": "2026-04-05T16:57:12.564036",
+  "processado_em": "2026-04-05T16:57:14.615049"
+}
