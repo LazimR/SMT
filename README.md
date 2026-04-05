@@ -1,80 +1,129 @@
 # Atividade 3 - Sistema Cliente/Servidor em Camadas
 
-## Estrutura
+## Objetivo do Projeto
+Este projeto implementa um sistema distribuído em camadas para monitoramento remoto de temperatura. O cliente envia leituras de sensor para o servidor, que valida os dados, aplica a regra de negócio, evita duplicidade e persiste o resultado em SQLite e em arquivos de evidência.
 
-- `frontend/app.py`: Cliente Tkinter (simulador de sensor).
-- `backend/app.py`: Servidor Flask com regras de negócio e idempotência.
-- `backend/database.py`: Inicialização e acesso ao SQLite.
-- `backend/rules.py`: Processamento lógico de status.
-- `backend/storage.py`: Salvamento em disco de JSON e PNG com OpenCV.
-- `backend/data/leituras.db`: Banco SQLite (criado automaticamente).
-- `backend/storage/leituras/`: Arquivos de cada leitura (JSON e PNG).
+## Visão Geral da Arquitetura
+- Cliente desktop: simula o sensor e envia leituras.
+- API do servidor: recebe as requisições e coordena o processamento.
+- Banco de dados: guarda o histórico das leituras.
+- Regras de negócio: classificam a temperatura em Normal, Alerta ou Crítico.
+- Persistência em arquivos: grava JSON e PNG de cada leitura processada.
+- Execução em produção: usa Waitress para subir a API.
 
-## Requisitos
+## Estrutura do Projeto
+```text
+frontend/
+└── app.py              # 🖥️ Cliente Tkinter: simula o sensor, envia leituras e mostra histórico/status
 
-- Python 3
-- Dependências em `requirements.txt`
+backend/
+├── app.py              # ✅ Coração da API: recebe requisições, valida o JSON, aplica idempotência e chama as outras camadas
+├── database.py         # 💾 Gerencia o SQLite: cria a tabela, consulta por id e salva leituras
+├── rules.py            # 📊 Regras de negócio: classifica a temperatura em Normal, Alerta ou Crítico
+├── storage.py          # 🗂️ Persistência em disco: salva JSON e gera PNG com OpenCV
+├── run_server.py       # 🚀 Inicialização em produção: sobe a API com Waitress
+├── data/               # 📦 Pasta do banco de dados
+│   └── leituras.db     # 💿 Banco SQLite criado automaticamente
+└── storage/            # 📁 Pasta dos arquivos gerados
+    └── leituras/       # 🖼️ Cada leitura salva aqui como JSON e PNG
+        ├── uuid.json
+        └── uuid.png
+```
 
-## Instalação
+## Função de Cada Arquivo
+| Arquivo | Função |
+|---|---|
+| [frontend/app.py](frontend/app.py) | Interface Tkinter do cliente. Gera leituras manuais ou automáticas, envia para o servidor e mostra histórico e status. |
+| [backend/app.py](backend/app.py) | API Flask. Expõe as rotas, valida payload, verifica duplicidade e orquestra o processamento. |
+| [backend/database.py](backend/database.py) | Acesso ao SQLite. Cria a tabela, consulta leitura por id e insere novos registros. |
+| [backend/rules.py](backend/rules.py) | Regra de negócio pura. Classifica a temperatura com base nos limites definidos. |
+| [backend/storage.py](backend/storage.py) | Persistência em disco. Salva JSON e gera PNG com OpenCV para cada leitura processada. |
+| [backend/run_server.py](backend/run_server.py) | Entrada de execução em produção. Inicializa o banco e sobe o servidor com Waitress. |
+| [README.md](README.md) | Documento de visão geral, execução, estrutura e evidências. |
+| [requirements.txt](requirements.txt) | Dependências do projeto. |
 
-No diretório `SMT`:
+## Fluxo de Execução
+1. O cliente gera uma leitura com `id` (UUID), `sensor_id`, `temperatura` e `timestamp` em ISO 8601.
+2. O cliente envia um `POST` para `/leitura`.
+3. O servidor valida o JSON, os campos obrigatórios, o UUID, a temperatura numérica e o timestamp.
+4. O servidor consulta o banco para garantir idempotência.
+5. Se a leitura já existir, ele retorna `duplicado = True` e não grava novamente.
+6. Se a leitura for nova, o servidor classifica o status lógico.
+7. O servidor grava a leitura no SQLite.
+8. O servidor salva o JSON e gera um PNG com OpenCV em `backend/storage/leituras/`.
+9. O servidor responde com os dados processados para o cliente atualizar a interface.
 
+## Regras de Negócio
+- Temperatura maior que 15: `Crítico`
+- Temperatura maior que 10: `Alerta`
+- Caso contrário: `Normal`
+
+## Persistência
+### SQLite
+A tabela `leituras` possui os campos:
+- `id` (`TEXT`, chave primária)
+- `sensor_id` (`TEXT`)
+- `temperatura` (`REAL`)
+- `status_logico` (`TEXT`)
+- `timestamp` (`TEXT`)
+
+### Arquivos Gerados
+Para cada leitura processada, o backend grava:
+- um arquivo JSON com os dados processados;
+- um arquivo PNG com a representação visual da leitura.
+
+## Como Executar
+### 1. Instalar dependências
 ```bash
 pip install -r requirements.txt
 ```
 
-## Execução
-
-1. Inicie o servidor em modo de produção:
-
+### 2. Subir o servidor
 ```bash
 python backend/run_server.py
 ```
 
-2. Inicie o cliente (em outro terminal):
-
+### 3. Abrir o cliente
 ```bash
 python frontend/app.py
 ```
 
-3. No cliente Tkinter, ajuste o campo URL para o IP/host do servidor no formato:
-
+### 4. Configurar a URL no cliente
+No campo de URL do cliente, use o endereço do servidor no formato:
 ```text
 http://IP_DO_SERVIDOR:5000/leitura
 ```
 
-## Regras de negócio implementadas
+## Evidências de Execução
+O projeto gera arquivos de evidência automaticamente em `backend/storage/leituras/`.
 
-- Temperatura `> 10`: `Alerta`
-- Temperatura `> 15`: `Crítico`
-- Caso contrário: `Normal`
+### Exemplo de leitura normal
+![Leitura normal](backend/storage/leituras/e3eede9a-459b-4807-80e9-4f7016651401.png)
 
-## Idempotência
+### Exemplo de leitura em crítico
+![Leitura crítica](backend/storage/leituras/48fe78ab-8c7a-4c1f-a6f5-c5d0e7bad656.png)
 
-- Cada envio usa `id` (UUID) como chave primária da tabela `leituras`.
-- Se o mesmo UUID for reenviado, o servidor retorna os dados já processados e não duplica no banco.
+### Exemplo de leitura automática
+![Leitura automática](backend/storage/leituras/fa3cd2dd-351a-48ed-a6f5-9aae5ed5e7d8.png)
 
-## Banco SQLite
+## Evidências Manuais da Execução
+Para a entrega da atividade, os prints mais importantes são estes:
+- terminal 1: servidor Flask/Waitress em execução;
+- terminal 2: health check com `Invoke-RestMethod`;
+- terminal 3: cliente Tkinter em execução;
+- interface com leitura manual;
+- interface com envio automático.
 
-Tabela `leituras`:
+Se você quiser, pode salvar esses prints em uma pasta como `docs/imagens/` e trocar este trecho por imagens do seu próprio teste.
 
-- `id` (TEXT, chave primária)
-- `sensor_id` (TEXT)
-- `temperatura` (REAL)
-- `status_logico` (TEXT)
-- `timestamp` (TEXT)
+## Dependências
+- Flask
+- requests
+- waitress
+- opencv-python
+- numpy
 
-## Fluxo implementado
-
-1. Cliente gera leitura e envia JSON com UUID.
-2. Servidor valida UUID e payload.
-3. Servidor aplica regra de negócio de status.
-4. Servidor salva arquivo JSON e imagem PNG da leitura em disco.
-5. Metadados são persistidos no SQLite.
-6. Servidor retorna status lógico para atualização da GUI.
-
-## Demonstração
-
-- O backend gera automaticamente um JSON e uma imagem PNG para cada leitura processada.
-- As imagens ficam em `backend/storage/leituras/` e podem ser usadas como evidência visual da execução.
-- Para a entrega final no GitHub, você ainda pode adicionar prints da interface ou um vídeo demonstrativo do fluxo cliente/servidor.
+## Observações
+- O sistema evita leituras duplicadas usando o UUID como chave primária.
+- O backend retorna `201` para leituras novas e `200` para leituras já processadas.
+- O servidor roda em `0.0.0.0:5000`, então pode ser acessado por outros dispositivos na rede.
