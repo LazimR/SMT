@@ -371,7 +371,6 @@ class SensorApp(tk.Tk):
             "timestamp":   timestamp,
         }
 
-        print(payload)
 
         http_code = "—"
         status_srv = None

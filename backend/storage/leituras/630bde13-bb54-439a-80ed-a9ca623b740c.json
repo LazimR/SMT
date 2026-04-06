@@ -1,0 +1,8 @@
+{
+  "id": "630bde13-bb54-439a-80ed-a9ca623b740c",
+  "sensor_id": "sensor-01",
+  "temperatura": 35.21,
+  "status_logico": "Crítico",
+  "timestamp": "2026-04-06T07:36:47.057317",
+  "processado_em": "2026-04-06T07:36:47.061202"
+}
